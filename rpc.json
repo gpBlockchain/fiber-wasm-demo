@@ -1,0 +1,377 @@
+{
+    "commands": [
+        {
+            "name": "send_btc",
+            "params": [
+                { "name": "btc_pay_req", "type": "text" },
+                { "name": "currency", "type": "text" }
+            ]
+        },
+        {
+            "name": "receive_btc",
+            "params": [
+                { "name": "payment_hash", "type": "text" },
+                { "name": "channel_id", "type": "text" },
+                { "name": "amount_sats", "type": "text" },
+                { "name": "final_tlc_expiry", "type": "text" }
+            ]
+        },
+        {
+            "name": "get_receive_btc_order",
+            "params": [
+                { "name": "payment_hash", "type": "text" }
+            ]
+        },
+        {
+            "name": "open_channel",
+            "params": [
+                { "name": "peer_id", "type": "text" },
+                { "name": "funding_amount", "type": "text" },
+                { "name": "public", "type": "checkbox" },
+                { "name": "funding_udt_type_script", "type": "json" },
+                { "name": "shutdown_script", "type": "json" },
+                { "name": "commitment_delay_epoch", "type": "text" },
+                { "name": "commitment_fee_rate", "type": "text" },
+                { "name": "funding_fee_rate", "type": "text" },
+                { "name": "tlc_expiry_delta", "type": "text" },
+                { "name": "tlc_min_value", "type": "text" },
+                { "name": "tlc_fee_proportional_millionths", "type": "text" },
+                { "name": "max_tlc_value_in_flight", "type": "text" },
+                { "name": "max_tlc_number_in_flight", "type": "text" }
+            ]
+        },
+        {
+            "name": "accept_channel",
+            "params": [
+                { "name": "temporary_channel_id", "type": "text" },
+                { "name": "funding_amount", "type": "text" },
+                { "name": "shutdown_script", "type": "json" },
+                { "name": "max_tlc_value_in_flight", "type": "text" },
+                { "name": "max_tlc_number_in_flight", "type": "text" },
+                { "name": "tlc_min_value", "type": "text" },
+                { "name": "tlc_fee_proportional_millionths", "type": "text" },
+                { "name": "tlc_expiry_delta", "type": "text" }
+            ]
+        },
+        {
+            "name": "abandon_channel",
+            "params": [
+                { "name": "channel_id", "type": "text" }
+            ]
+        },
+        {
+            "name": "list_channels",
+            "params": [
+                { "name": "peer_id", "type": "text" },
+                { "name": "include_closed", "type": "checkbox" }
+            ]
+        },
+        {
+            "name": "shutdown_channel",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "close_script", "type": "json" },
+                { "name": "fee_rate", "type": "text" },
+                { "name": "force", "type": "checkbox" }
+            ]
+        },
+        {
+            "name": "update_channel",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "enabled", "type": "checkbox" },
+                { "name": "tlc_expiry_delta", "type": "text" },
+                { "name": "tlc_minimum_value", "type": "text" },
+                { "name": "tlc_fee_proportional_millionths", "type": "text" }
+            ]
+        },
+        {
+            "name": "commitment_signed",
+            "params": [
+                { "name": "channel_id", "type": "text" }
+            ]
+        },
+        {
+            "name": "add_tlc",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "amount", "type": "text" },
+                { "name": "payment_hash", "type": "text" },
+                { "name": "expiry", "type": "text" },
+                { "name": "hash_algorithm", "type": "text" }
+            ]
+        },
+        {
+            "name": "remove_tlc",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "tlc_id", "type": "text" },
+                { "name": "reason", "type": "text" }
+            ]
+        },
+        {
+            "name": "submit_commitment_transaction",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "commitment_number", "type": "text" }
+            ]
+        },
+        {
+            "name": "graph_nodes",
+            "params": [
+                { "name": "limit", "type": "text" },
+                { "name": "after", "type": "text" }
+            ]
+        },
+        {
+            "name": "graph_channels",
+            "params": [
+                { "name": "limit", "type": "text" },
+                { "name": "after", "type": "text" }
+            ]
+        },
+        {
+            "name": "node_info",
+            "params": []
+        },
+        {
+            "name": "new_invoice",
+            "params": [
+                { "name": "amount", "type": "text" },
+                { "name": "description", "type": "text" },
+                { "name": "currency", "type": "text" },
+                { "name": "payment_preimage", "type": "text" },
+                { "name": "expiry", "type": "text" },
+                { "name": "fallback_address", "type": "text" },
+                { "name": "final_expiry_delta", "type": "text" },
+                { "name": "udt_type_script", "type": "json" },
+                { "name": "hash_algorithm", "type": "text" }
+            ]
+        },
+        {
+            "name": "parse_invoice",
+            "params": [
+                { "name": "invoice", "type": "text" }
+            ]
+        },
+        {
+            "name": "get_invoice",
+            "params": [
+                { "name": "payment_hash", "type": "text" }
+            ]
+        },
+        {
+            "name": "cancel_invoice",
+            "params": [
+                { "name": "payment_hash", "type": "text" }
+            ]
+        },
+        {
+            "name": "send_payment",
+            "params": [
+                { "name": "target_pubkey", "type": "text" },
+                { "name": "amount", "type": "text" },
+                { "name": "payment_hash", "type": "text" },
+                { "name": "final_tlc_expiry_delta", "type": "text" },
+                { "name": "tlc_expiry_limit", "type": "text" },
+                { "name": "invoice", "type": "text" },
+                { "name": "timeout", "type": "text" },
+                { "name": "max_fee_amount", "type": "text" },
+                { "name": "max_parts", "type": "text" },
+                { "name": "keysend", "type": "checkbox" },
+                { "name": "udt_type_script", "type": "json" },
+                { "name": "allow_self_payment", "type": "checkbox" },
+                { "name": "custom_records", "type": "json" },
+                { "name": "hop_hints", "type": "json" },
+                { "name": "dry_run", "type": "checkbox" }
+            ]
+        },
+        {
+            "name": "get_payment",
+            "params": [
+                { "name": "payment_hash", "type": "text" }
+            ]
+        },
+        {
+            "name": "build_router",
+            "params": [
+                { "name": "amount", "type": "text" },
+                { "name": "udt_type_script", "type": "json" },
+                { "name": "hops_info", "type": "json" },
+                { "name": "final_tlc_expiry_delta", "type": "text" }
+            ]
+        },
+        {
+            "name": "send_payment_with_router",
+            "params": [
+                { "name": "payment_hash", "type": "text" },
+                { "name": "router", "type": "json" },
+                { "name": "invoice", "type": "text" },
+                { "name": "custom_records", "type": "json" },
+                { "name": "keysend", "type": "checkbox" },
+                { "name": "udt_type_script", "type": "json" },
+                { "name": "dry_run", "type": "checkbox" }
+            ]
+        },
+        {
+            "name": "connect_peer",
+            "params": [
+                { "name": "address", "type": "text" },
+                { "name": "save", "type": "checkbox" }
+            ]
+        },
+        {
+            "name": "disconnect_peer",
+            "params": [
+                { "name": "peer_id", "type": "text" }
+            ]
+        },
+        {
+            "name": "list_peers",
+            "params": []
+        },
+        {
+            "name": "create_watch_channel",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "funding_tx_lock", "type": "json" },
+                { "name": "remote_settlement_data", "type": "json" }
+            ]
+        },
+        {
+            "name": "remove_watch_channel",
+            "params": [
+                { "name": "channel_id", "type": "text" }
+            ]
+        },
+        {
+            "name": "update_revocation",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "revocation_data", "type": "json" },
+                { "name": "settlement_data", "type": "json" }
+            ]
+        },
+        {
+            "name": "update_local_settlement",
+            "params": [
+                { "name": "channel_id", "type": "text" },
+                { "name": "settlement_data", "type": "json" }
+            ]
+        },
+        {
+            "name": "create_preimage",
+            "params": [
+                { "name": "payment_hash", "type": "text" },
+                { "name": "preimage", "type": "text" }
+            ]
+        },
+        {
+            "name": "remove_preimage",
+            "params": [
+                { "name": "payment_hash", "type": "text" }
+            ]
+        }
+    ],
+    "params": {
+        "cch": {
+            "btc_pay_req": "",
+            "currency": "Fibb",
+            "payment_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "channel_id": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "amount_sats": "0",
+            "final_tlc_expiry": "0"
+        },
+        "channel": {
+            "peer_id": "QmTSpNhqfwjepJS475JTMck5ftvbSatmrBew9mgfwy9Rgq",
+            "funding_amount": "0xba43b7400",
+            "public": true,
+            "funding_udt_type_script": null,
+            "shutdown_script": null,
+            "commitment_delay_epoch": "0",
+            "commitment_fee_rate": "0",
+            "funding_fee_rate": "0",
+            "tlc_expiry_delta": "86400000",
+            "tlc_min_value": "0",
+            "tlc_fee_proportional_millionths": "1000",
+            "max_tlc_value_in_flight": "0",
+            "max_tlc_number_in_flight": "125",
+            "temporary_channel_id": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "channel_id": "0x9350cfcb23d4e8710bea6a6b239406b42a2780cfbdb86fe9122d54be4d3049a0",
+            "close_script": {
+                "code_hash": "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                "hash_type": "type",
+                "args": "0x341617eed3628cfdaee64428f5517bf0195154099"
+            },
+            "fee_rate": "0x3FC",
+            "force": false,
+            "include_closed": false,
+            "enabled": true,
+            "tlc_minimum_value": "0"
+        },
+        "dev": {
+            "channel_id": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "amount": "0",
+            "payment_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "expiry": "0",
+            "hash_algorithm": "CkbHash",
+            "tlc_id": "0",
+            "reason": "RemoveTlcFulfill",
+            "commitment_number": "0"
+        },
+        "graph": {
+            "limit": "0",
+            "after": ""
+        },
+        "info": {},
+        "invoice": {
+            "amount": "0",
+            "description": "",
+            "currency": "Fibb",
+            "payment_preimage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "expiry": "0",
+            "fallback_address": "",
+            "final_expiry_delta": "0",
+            "udt_type_script": null,
+            "hash_algorithm": "CkbHash",
+            "invoice": "fibt10000000001pcsaug0p0exgf0pnm6vk6kgysc2mherkdnx2v90unk9f875ykusakhevxxd5ynsm3jt302tdkcxya5ej6q60eypglts7jq7s4eq0cmfjrdf6kajch9d3xvxv9gmvred4e720faxtzwkqddxpwk5m7kjwnajv90m6qx7ms9t70rgjattjjr8rx3aqc0x7xr5vwcsepr35f8gjjsly6hh5s9vyept4ygtfxml6n82xk5t9y2k0ugau5ctmddqe4qq7nuwzah0gtx60jncvlw09rw6h7trkvutahu44wx09fd8dfcc9wn4nmsytrazq564z0l7e708hav3u08almaf2r409r4maf8suzp4mysp7n490f",
+            "payment_hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "payment": {
+            "target_pubkey": "",
+            "amount": "0",
+            "payment_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "final_tlc_expiry_delta": "0",
+            "tlc_expiry_limit": "0",
+            "invoice": "",
+            "timeout": "0",
+            "max_fee_amount": "0",
+            "max_parts": "0",
+            "keysend": false,
+            "udt_type_script": null,
+            "allow_self_payment": false,
+            "custom_records": {
+                "0x1": "0x01020304",
+                "0x2": "0x05060708"
+            },
+            "hop_hints": [],
+            "dry_run": false,
+            "router": [],
+            "hops_info": []
+        },
+        "peer": {
+            "address": "/ip4/16.162.99.28/tcp/8229/ws/p2p/QmTSpNhqfwjepJS475JTMck5ftvbSatmrBew9mgfwy9Rgq",
+            "save": false,
+            "peer_id": "QmTSpNhqfwjepJS475JTMck5ftvbSatmrBew9mgfwy9Rgq"
+        },
+        "watchtower": {
+            "channel_id": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "funding_tx_lock": null,
+            "remote_settlement_data": null,
+            "revocation_data": null,
+            "settlement_data": null,
+            "payment_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "preimage": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        }
+    }
+}
