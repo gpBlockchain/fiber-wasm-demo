@@ -55,7 +55,7 @@ function registerRPCMethods() {
 
 server.addMethod("stop", async () => {
     // @ts-ignore
-    await page.evaluate(() => window.client.stop())
+    await page.evaluate(() => window.fiber.stop())
 });
 
 
