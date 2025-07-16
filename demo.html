@@ -199,6 +199,57 @@
       margin-bottom: 24px;
     }
     
+    /* 节点列表样式 */
+    .active-nodes {
+      margin-top: 15px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+    
+    .active-nodes h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #555;
+    }
+    
+    .nodes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .node-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background-color: #f0f4f8;
+      border-radius: 4px;
+      border-left: 3px solid #4a6cf7;
+    }
+    
+    .node-prefix {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .btn-small {
+      padding: 3px 8px;
+      font-size: 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .btn-danger {
+      background-color: #ff4757;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #ff6b81;
+    }
+    
     .info-card {
       background: rgba(255, 255, 255, 0.9);
       border-radius: 12px;
@@ -510,18 +561,43 @@
                 格式: 0201010101010101010101010101010101010101010101010101010101010101
               </div>
             </div>
+            <div class="form-group">
+              <label>fiber database prefix</label>
+              <input type="text" id="fiber-data-base-prefix-input" placeholder="fiber database prefix，留空使用default" style="font-family: 'Fira Code', monospace;">
+              <div class="form-hint">
+                用于区分多个Fiber实例，每个实例使用不同的数据库前缀
+              </div>
+            </div>
           </div>
           
           <div class="card node-controls">
             <h3>🎮 节点控制</h3>
+            <div class="form-group">
+              <label for="fiber-prefix-input">节点前缀</label>
+              <input type="text" id="fiber-prefix-input" placeholder="default" value="default">
+            </div>
             <div class="button-group">
               <button class="btn-primary" id="init-button" onclick="initWorkers()">
                 <span class="status-indicator status-offline" id="node-status"></span>
                 启动节点
               </button>
-              <button class="btn-secondary" id="stop-button" onclick="stopFiber()">
-                停止节点
-              </button>
+            </div>
+          </div>
+          
+          <!-- Fiber实例选择器 -->
+          <div class="card" id="fiber-selector-container" style="display: none;">
+            <h3>🔄 Fiber实例选择</h3>
+            <div class="form-group">
+              <label>选择活跃的Fiber实例</label>
+              <select id="fiber-selector" onchange="switchFiber(this.value)">
+                <!-- 选项将由JavaScript动态填充 -->
+              </select>
+            </div>
+            <div class="active-nodes">
+              <h4>活跃节点列表</h4>
+              <div id="active-nodes-list" class="nodes-list">
+                <!-- 节点列表将由JavaScript动态填充 -->
+              </div>
             </div>
           </div>
         </div>
@@ -604,6 +680,10 @@
 
 <script type="module">
   import { Fiber } from "./dist/index.js";
+  // 全局存储多个fiber实例
+  window.fibers = {};
+  // 当前选中的fiber实例
+  window.currentFiberPrefix = "default";
   // 辅助函数：将十六进制字符串转换为Uint8Array
   function hexStringToUint8Array(hexString) {
     // 移除可能的0x前缀和空格
@@ -629,8 +709,11 @@
   window.initWorkers = async () => {
     // 表单验证
     if (!validateForm()) {
+      console.log("---------form error----------");
       return;
     }
+    console.log("---------initWorkers----------");
+
     
     const initButton = document.getElementById('init-button');
     const nodeStatus = document.getElementById('node-status');
@@ -638,13 +721,27 @@
     initButton.classList.add('loading');
     initButton.disabled = true;
     initButton.innerHTML = '<span class="status-indicator status-offline"></span>正在启动...';
-    
+    console.log("---------begin----------");
     try {
       console.log(Fiber);
       // 获取选择的配置文件
       const configFile = document.getElementById('config-file-select').value;
       const config = await (await fetch(configFile)).text()
       const rpcConfig = await (await fetch("rpc.json")).text()
+      
+      // 获取或创建fiber实例前缀
+      const fiberPrefix = document.getElementById('fiber-prefix-input').value.trim() || "default";
+      window.currentFiberPrefix = fiberPrefix;
+      
+      // 检查是否已存在该前缀的fiber实例
+      if (window.fibers[fiberPrefix]) {
+        showMessage(`已存在前缀为 ${fiberPrefix} 的Fiber实例，请先停止或使用其他前缀`, 'error');
+        initButton.classList.remove('loading');
+        initButton.disabled = false;
+        initButton.innerHTML = '<span class="status-indicator status-offline"></span>启动节点';
+        return;
+      }
+      
       const fiber = new Fiber();
       
       // 获取私钥输入
@@ -699,26 +796,39 @@
         ]);
       }
       
+      // 使用前缀作为数据库前缀
+      const databasePrefix = `/wasm-${fiberPrefix}`;
+      
       await fiber.start(
               config,
               peerIdBytes,
               privateKey,
-              devConfig, "info"
+              devConfig, 
+              "info",
+              databasePrefix
       )
       
-      console.log('Fiber start successfully');
+      console.log(`Fiber instance with prefix ${fiberPrefix} started successfully`);
       console.log(await fiber.invokeCommand("list_peers", []))
-      window.fiber = fiber;
+      
+      // 将fiber实例存储到全局对象中
+      window.fibers[fiberPrefix] = fiber;
+      
+      // 更新当前选中的fiber实例
+      updateFiberSelector();
+      
       const textInput = document.getElementById('config-text');
       textInput.value = rpcConfig;
       loadConfig();
       
       // 更新状态指示器为在线
-      initButton.innerHTML = '<span class="status-indicator status-online"></span>停止节点';
-      initButton.onclick = stopFiber;
+      initButton.innerHTML = '<span class="status-indicator status-online"></span>启动节点';
       initButton.disabled = false;
       
-      showMessage('Fiber节点初始化成功', 'success');
+      showMessage(`Fiber节点 ${fiberPrefix} 初始化成功`, 'success');
+      
+      // 显示fiber选择器
+      document.getElementById('fiber-selector-container').style.display = 'block';
       
       // 显示peer信息区域并开始定时刷新
       document.getElementById('peers-info').style.display = 'block';
@@ -746,63 +856,89 @@
     }
   };
 
-  window.stopFiber = async ()=>{
+  window.stopFiber = async (prefix)=>{
     const initButton = document.getElementById('init-button');
     
     try {
-      initButton.innerHTML = '<span class="status-indicator status-offline"></span>正在停止...';
       initButton.disabled = true;
       
-      // 停止定时刷新
-      if (window.peersRefreshInterval) {
-        clearInterval(window.peersRefreshInterval);
-        window.peersRefreshInterval = null;
-      }
-      // 停止图数据刷新
-      if (window.graphRefreshInterval) {
-        clearInterval(window.graphRefreshInterval);
-        window.graphRefreshInterval = null;
-      }
-      // 停止本地通道刷新
-      if (window.localChannelsRefreshInterval) {
-        clearInterval(window.localChannelsRefreshInterval);
-        window.localChannelsRefreshInterval = null;
-      }
-      // 隐藏peer信息区域和侧边栏
-      document.getElementById('peers-info').style.display = 'none';
-      document.getElementById('graph-sidebar').style.display = 'none';
+      // 如果没有指定前缀，使用当前选中的前缀
+      const targetPrefix = prefix || window.currentFiberPrefix;
       
-      // 清空图数据
-      window.graphNodesData = { nodes: [], lastCursor: null, hasMore: true };
-      window.graphChannelsData = { channels: [], lastCursor: null, hasMore: true };
-      // 清空本地通道数据
-      window.localChannelsData = { channels: [] };
+      // 获取目标fiber实例
+      const targetFiber = window.fibers[targetPrefix];
       
-      if (window.fiber) {
-        window.fiber.stop();
-        window.fiber = null;
+      if (!targetFiber) {
+        showMessage(`未找到前缀为 ${targetPrefix} 的节点`, 'warning');
+        return;
       }
       
-      showMessage('节点已成功停止', 'success');
+      showMessage(`正在停止节点 ${targetPrefix}...`, 'info');
+      
+      // 如果停止的是当前选中的节点，需要停止定时刷新和清空数据
+      if (targetPrefix === window.currentFiberPrefix) {
+        // 停止定时刷新
+        if (window.peersRefreshInterval) {
+          clearInterval(window.peersRefreshInterval);
+          window.peersRefreshInterval = null;
+        }
+        // 停止图数据刷新
+        if (window.graphRefreshInterval) {
+          clearInterval(window.graphRefreshInterval);
+          window.graphRefreshInterval = null;
+        }
+        // 停止本地通道刷新
+        if (window.localChannelsRefreshInterval) {
+          clearInterval(window.localChannelsRefreshInterval);
+          window.localChannelsRefreshInterval = null;
+        }
+        
+        // 清空图数据
+        window.graphNodesData = { nodes: [], lastCursor: null, hasMore: true };
+        window.graphChannelsData = { channels: [], lastCursor: null, hasMore: true };
+        // 清空本地通道数据
+        window.localChannelsData = { channels: [] };
+      }
+      
+      // 停止fiber实例
+      await targetFiber.stop();
+      delete window.fibers[targetPrefix];
+      
+      // 如果没有更多fiber实例，隐藏选择器和相关区域
+      if (Object.keys(window.fibers).length === 0) {
+        document.getElementById('fiber-selector-container').style.display = 'none';
+        document.getElementById('peers-info').style.display = 'none';
+        document.getElementById('graph-sidebar').style.display = 'none';
+      } else {
+        // 更新选择器
+        updateFiberSelector();
+        
+        // 如果停止的是当前选中的节点，切换到第一个可用节点
+        if (targetPrefix === window.currentFiberPrefix) {
+          const firstAvailablePrefix = Object.keys(window.fibers)[0];
+          window.switchFiber(firstAvailablePrefix);
+        }
+      }
+      
+      showMessage(`节点 ${targetPrefix} 已成功停止`, 'success');
     } catch (error) {
       console.error('停止节点失败:', error);
       showMessage('停止节点失败: ' + error.message, 'error');
     } finally {
       // 重置按钮状态
-      initButton.innerHTML = '<span class="status-indicator status-offline"></span>启动节点';
-      initButton.onclick = initWorkers;
       initButton.disabled = false;
     }
   }
   
   // 刷新peer列表
   window.refreshPeers = async () => {
-    if (!window.fiber) {
+    const currentFiber = window.fibers[window.currentFiberPrefix];
+    if (!currentFiber) {
       return;
     }
     
     try {
-      const result = await window.fiber.invokeCommand("list_peers", []);
+      const result = await currentFiber.invokeCommand("list_peers", []);
       updatePeersDisplay(result.peers || []);
       document.getElementById('peers-update-time').textContent = `最后更新: ${new Date().toLocaleTimeString()}`;
     } catch (error) {
@@ -863,7 +999,8 @@
   
   // 初始化图数据
   window.initGraphData = async () => {
-    if (!window.fiber) {
+    const currentFiber = window.fibers[window.currentFiberPrefix];
+    if (!currentFiber) {
       return;
     }
     
@@ -880,7 +1017,8 @@
   
   // 加载图节点数据
   async function loadGraphNodes(isLoadMore = false) {
-    if (!window.fiber) return;
+    const currentFiber = window.fibers[window.currentFiberPrefix];
+    if (!currentFiber) return;
     
     try {
       const params = [{ "limit": "0x5" }];
@@ -888,7 +1026,7 @@
         params[0].after = window.graphNodesData.lastCursor;
       }
       
-      const result = await window.fiber.invokeCommand("graph_nodes", params);
+      const result = await currentFiber.invokeCommand("graph_nodes", params);
       
       if (result.nodes && result.nodes.length > 0) {
         if (isLoadMore) {
@@ -913,7 +1051,8 @@
   
   // 加载图通道数据
   async function loadGraphChannels(isLoadMore = false) {
-    if (!window.fiber) return;
+    const currentFiber = window.fibers[window.currentFiberPrefix];
+    if (!currentFiber) return;
     
     try {
       const params = [{ "limit": "0x5" }];
@@ -921,7 +1060,7 @@
         params[0].after = window.graphChannelsData.lastCursor;
       }
       
-      const result = await window.fiber.invokeCommand("graph_channels", params);
+      const result = await currentFiber.invokeCommand("graph_channels", params);
       
       if (result.channels && result.channels.length > 0) {
         if (isLoadMore) {
@@ -1028,6 +1167,73 @@
     window.graphRefreshInterval = setInterval(refreshGraphData, 30000);
   }
   
+  // 更新Fiber实例选择器
+  function updateFiberSelector() {
+    const selectorContainer = document.getElementById('fiber-selector-container');
+    const selector = document.getElementById('fiber-selector');
+    const nodeListContainer = document.getElementById('active-nodes-list');
+    
+    if (!selector) return;
+    
+    // 清空现有选项
+    selector.innerHTML = '';
+    
+    // 清空节点列表
+    if (nodeListContainer) {
+      nodeListContainer.innerHTML = '';
+    }
+    
+    // 获取所有fiber实例前缀
+    const prefixes = Object.keys(window.fibers);
+    
+    if (prefixes.length === 0) {
+      selectorContainer.style.display = 'none';
+      return;
+    }
+    
+    // 添加选项
+    prefixes.forEach(prefix => {
+      const option = document.createElement('option');
+      option.value = prefix;
+      option.textContent = prefix;
+      selector.appendChild(option);
+      
+      // 添加到节点列表
+      if (nodeListContainer) {
+        const nodeItem = document.createElement('div');
+        nodeItem.className = 'node-item';
+        nodeItem.innerHTML = `
+          <span class="node-prefix">${prefix}</span>
+          <button class="btn-small btn-danger" onclick="stopFiber('${prefix}')">停止</button>
+        `;
+        nodeListContainer.appendChild(nodeItem);
+      }
+    });
+    
+    // 设置当前选中的fiber实例
+    selector.value = window.currentFiberPrefix;
+    
+    // 显示选择器
+    selectorContainer.style.display = 'block';
+  }
+  
+  // 切换Fiber实例
+  window.switchFiber = function(prefix) {
+    if (!window.fibers[prefix]) {
+      showMessage(`未找到前缀为 ${prefix} 的Fiber实例`, 'error');
+      return;
+    }
+    
+    window.currentFiberPrefix = prefix;
+    
+    // 刷新数据显示
+    refreshPeers();
+    initGraphData();
+    loadLocalChannels();
+    
+    showMessage(`已切换到Fiber实例: ${prefix}`, 'success');
+  }
+  
   // 本地通道相关变量
   window.localChannelsData = {
     channels: []
@@ -1035,10 +1241,11 @@
   
   // 获取本地通道信息
   async function loadLocalChannels() {
-    if (!window.fiber) return;
+    const currentFiber = window.fibers[window.currentFiberPrefix];
+    if (!currentFiber) return;
     
     try {
-      const result = await window.fiber.invokeCommand("list_channels", [{ "include_closed": true }]);
+      const result = await currentFiber.invokeCommand("list_channels", [{ "include_closed": true }]);
       
       if (result.channels && result.channels.length > 0) {
         window.localChannelsData.channels = result.channels;
@@ -1141,7 +1348,7 @@
   // Initialize workers (placeholder for Web Worker or similar)
   function initializeWorkers() {
     console.log("Initializing workers...");
-    displayOutput("Workers initialized (assuming window.fiber is ready).");
+    displayOutput("Workers initialized (Fiber实例已准备就绪).");
   }
 
   // Utility to display output
@@ -1304,8 +1511,14 @@
     }
 
     try {
+      const currentFiber = window.fibers[window.currentFiberPrefix];
+      if (!currentFiber) {
+        showMessage(`未找到前缀为 ${window.currentFiberPrefix} 的Fiber实例`, 'error');
+        return;
+      }
+      
       const startTime = Date.now();
-      const result = await window.fiber.invokeCommand(commandName, params);
+      const result = await currentFiber.invokeCommand(commandName, params);
       const duration = Date.now() - startTime;
       
       showMessage(`✅ 命令执行成功 (${duration}ms)\n命令: ${commandName}\n参数: ${JSON.stringify(params, null, 2)}\n结果:\n${JSON.stringify(result, null, 2)}`);
@@ -1324,7 +1537,8 @@
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
       const invokeBtn = document.getElementById('invoke-btn');
-      if (!invokeBtn.disabled && window.fiber) {
+      const currentFiber = window.fibers[window.currentFiberPrefix];
+      if (!invokeBtn.disabled && currentFiber) {
         invokeSelectedCommand();
       }
     }

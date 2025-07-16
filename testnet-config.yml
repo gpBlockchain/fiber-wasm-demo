@@ -13,6 +13,10 @@ fiber:
   chain: testnet
   # lock script configurations related to fiber network
   # https://github.com/nervosnetwork/fiber-scripts/blob/main/deployment/testnet/migrations/2025-02-28-111246.json
+  #   standalone_watchtower_rpc_url: http://127.0.0.1:8229
+  # disable_built_in_watchtower: true
+  standalone_watchtower_rpc_url: http://16.162.99.28:8230
+  disable_built_in_watchtower: true
   scripts:
     - name: FundingLock
       script:

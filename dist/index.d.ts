@@ -1,3 +1,9 @@
+import { AbandonChannelParams, AcceptChannelParams, AcceptChannelResult, ListChannelsParams, ListChannelsResult, OpenChannelParams, OpenChannelResult, ShutdownChannelParams, UpdateChannelParams } from "./types/channel.ts";
+import { GraphChannelsParams, GraphChannelsResult, GraphNodesParams, GraphNodesResult } from "./types/graph.ts";
+import { NodeInfoResult } from "./types/info.ts";
+import { GetInvoiceResult, InvoiceParams, InvoiceResult, NewInvoiceParams, ParseInvoiceParams, ParseInvoiceResult } from "./types/invoice.ts";
+import { BuildPaymentRouterResult, BuildRouterParams, GetPaymentCommandParams, GetPaymentCommandResult, SendPaymentCommandParams, SendPaymentWithRouterParams } from "./types/payment.ts";
+import { ConnectPeerParams, DisconnectPeerParams, ListPeerResult } from "./types/peer.ts";
 /**
  * A Fiber Wasm instance
  */
@@ -21,19 +27,41 @@ declare class Fiber {
      * @param ckbSecretKey secret key for CKB
      * @param chainSpec Chain spec if chain is neither testnet nor mainnet
      * @param logLevel log level, such as `trace`, `debug`, `info`, `error`
+     * @param databasePrefix Name prefix of IndexedDB store. Defaults to `/wasm`
      *
      */
-    start(config: string, fiberKeyPair: Uint8Array, ckbSecretKey: Uint8Array, chainSpec?: string, logLevel?: "trace" | "debug" | "info" | "error"): Promise<void>;
+    start(config: string, fiberKeyPair: Uint8Array, ckbSecretKey: Uint8Array, chainSpec?: string, logLevel?: "trace" | "debug" | "info" | "error", databasePrefix?: string): Promise<void>;
     invokeCommand(name: string, args?: any[]): Promise<any>;
     /**
      * Stop the fiber instance.
      */
     stop(): Promise<void>;
+    openChannel(params: OpenChannelParams): Promise<OpenChannelResult>;
+    acceptChannel(params: AcceptChannelParams): Promise<AcceptChannelResult>;
+    abandonChannel(params: AbandonChannelParams): Promise<void>;
+    listChannels(params: ListChannelsParams): Promise<ListChannelsResult>;
+    shutdownChannel(params: ShutdownChannelParams): Promise<void>;
+    updateChannel(params: UpdateChannelParams): Promise<void>;
+    graphNodes(params: GraphNodesParams): Promise<GraphNodesResult>;
+    graphChannels(params: GraphChannelsParams): Promise<GraphChannelsResult>;
+    nodeInfo(): Promise<NodeInfoResult>;
+    newInvoice(params: NewInvoiceParams): Promise<InvoiceResult>;
+    parseInvoice(params: ParseInvoiceParams): Promise<ParseInvoiceResult>;
+    getInvoice(params: InvoiceParams): Promise<GetInvoiceResult>;
+    cancelInvoice(params: InvoiceParams): Promise<GetInvoiceResult>;
+    sendPayment(params: SendPaymentCommandParams): Promise<GetPaymentCommandResult>;
+    getPayment(params: GetPaymentCommandParams): Promise<GetPaymentCommandResult>;
+    buildRouter(params: BuildRouterParams): Promise<BuildPaymentRouterResult>;
+    sendPaymentWithRouter(params: SendPaymentWithRouterParams): Promise<GetPaymentCommandResult>;
+    connectPeer(params: ConnectPeerParams): Promise<void>;
+    disconnectPeer(params: DisconnectPeerParams): Promise<void>;
+    listPeers(): Promise<ListPeerResult>;
 }
 export { Fiber };
 /**
- * Generate a random network secret key.
+ * Generate a random 32-byte secret key.
  * @returns The secret key.
  */
+export declare function randomSecretKey(): Uint8Array;
 export * from "./types/general.ts";
 //# sourceMappingURL=../src/dist/index.d.ts.map

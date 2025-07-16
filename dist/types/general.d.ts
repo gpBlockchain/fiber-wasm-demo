@@ -11,6 +11,7 @@ interface FiberWorkerInitializationOptions {
     ckbSecretKey: Uint8Array;
     config: string;
     chainSpec?: string;
+    databasePrefix?: string;
 }
 interface FiberInvokeRequest {
     name: string;
@@ -24,5 +25,6 @@ type FiberInvokeResponse = {
     error: string;
 };
 type HexString = `0x${string}`;
-export type { DbWorkerInitializationOptions, FiberWorkerInitializationOptions, FiberInvokeRequest, FiberInvokeResponse, HexString };
+type HashAlgorithm = "ckb_hash" | "sha_256";
+export type { DbWorkerInitializationOptions, FiberWorkerInitializationOptions, FiberInvokeRequest, FiberInvokeResponse, HexString, HashAlgorithm };
 //# sourceMappingURL=../../src/dist/types/general.d.ts.map
