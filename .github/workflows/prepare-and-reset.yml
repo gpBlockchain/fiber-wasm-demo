@@ -34,7 +34,7 @@ jobs:
         run: chmod +x prepare.sh
 
       - name: Run prepare script
-        run: xvfb-run --auto-servernum ./prepare.sh
+        run: ./prepare.sh
 
       - name: Wait for servers to start
         run: |
