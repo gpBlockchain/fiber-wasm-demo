@@ -230,7 +230,7 @@ app.post('/', async (req, res) => {
 
 // start service
 app.listen(port, async () => {
-    browser = await chromium.launch({ headless: false }); // Visible browser for debugging
+    browser = await chromium.launch({ headless: true }); // Visible browser for debugging
     context = await browser.newContext();
     page = await context.newPage();
     await page.goto(lightClientUrl); // Adjust URL if needed
