@@ -51,6 +51,8 @@ jobs:
             --header 'Content-Type: application/json' \
             --data '{ "id": 42,"jsonrpc": "2.0","method": "reset","params": []}'
           echo "\nReset API call completed"
+          curl --location 'http://127.0.0.1:9000' --header 'Content-Type: application/json' --data '{ "id": 42,"jsonrpc": "2.0","method": "new_client","params": [{"privateKey":"0000000000000000000000000000000000000000000000000000000000000028","peerId":"0201010101010101010101010101010101010101010101010101010101010101","devConfig":"config.yml","databasePrefix":"default"}]}'
+          curl --location 'http://127.0.0.1:9000' --header 'Content-Type: application/json' --header 'databaseprefix: default' --data '{ "id": 42,"jsonrpc": "2.0","method": "node_info","params": []}'
 
       - name: Check logs if failed
         if: failure()
