@@ -1,0 +1,61 @@
+name: Prepare and Reset API Call
+
+on:
+  workflow_dispatch:  # 允许手动触发
+  push:
+    branches: [ main, master, develop ]  # 当推送到这些分支时触发
+  pull_request:
+    branches: [ main, master, develop ]  # 当创建针对这些分支的PR时触发
+
+jobs:
+  prepare-and-reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Install Python dependencies
+        run: pip install requests  # 安装可能需要的依赖
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Make prepare.sh executable
+        run: chmod +x prepare.sh
+
+      - name: Run prepare script
+        run: xvfb-run --auto-servernum ./prepare.sh
+
+      - name: Wait for servers to start
+        run: |
+          echo "Waiting for servers to start..."
+          sleep 15  # 给服务器足够的启动时间
+          echo "Checking if servers are running..."
+          curl --head --silent --fail http://localhost:8000 || echo "Warning: HTTP server not responding"
+          curl --head --silent --fail http://localhost:9000 || echo "Warning: RPC server not responding"
+
+      - name: Call reset API
+        run: |
+          echo "Calling reset API..."
+          curl --location 'http://127.0.0.1:9000' \
+            --header 'Content-Type: application/json' \
+            --data '{ "id": 42,"jsonrpc": "2.0","method": "reset","params": []}'
+          echo "\nReset API call completed"
+
+      - name: Check logs if failed
+        if: failure()
+        run: |
+          echo "==== Server Log ===="
+          cat server.log || echo "No server.log found"
+          echo "==== Service Log ===="
+          cat fiber-wasm-client-rpc/service.log || echo "No service.log found"
