@@ -545,6 +545,7 @@
                 <option value="config.yml">默认配置 (config.yml)</option>
                 <option value="testnet-config.yml">测试网配置 (testnet-config.yml)</option>
                 <option value="dev-config.yml">开发配置 (dev-config.yml)</option>
+                <option value="dev-config-watch-tower.yml">开发配置 (dev-config-watch-tower.yml)</option>
               </select>
             </div>
             <div class="form-group">
@@ -577,7 +578,7 @@
               <input type="text" id="fiber-prefix-input" placeholder="default" value="default">
             </div>
             <div class="button-group">
-              <button class="btn-primary" id="init-button" onclick="initWorkers()">
+              <button class="btn-primary" id="init-button" onclick="window.initWorkers()">
                 <span class="status-indicator status-offline" id="node-status"></span>
                 启动节点
               </button>
@@ -766,7 +767,7 @@
       
       // 根据配置文件选择决定是否读取dev.toml
       let devConfig = undefined;
-      if (configFile === 'dev-config.yml') {
+      if (configFile === 'dev-config.yml' || configFile === 'dev-config-watch-tower.yml') {
         try {
           devConfig = await (await fetch('dev.toml')).text();
           showMessage('已加载dev.toml配置', 'info');
@@ -849,7 +850,7 @@
       
       // 重置按钮状态
       initButton.innerHTML = '<span class="status-indicator status-offline"></span>启动节点';
-      initButton.onclick = initWorkers;
+      initButton.onclick = window.initWorkers;
       initButton.disabled = false;
     } finally {
       initButton.classList.remove('loading');
@@ -1616,4 +1617,4 @@
   };
 </script>
 </body>
-</html>
+</htm

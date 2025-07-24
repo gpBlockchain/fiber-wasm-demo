@@ -1,11 +1,14 @@
-git clone https://github.com/Officeyutong/fiber.git
+set -x
+FIBER_REPO=${FIBER_REPO:-"https://github.com/nervosnetwork/fiber.git"}
+FIBER_BRANCH=${FIBER_BRANCH:-"develop"}
+git clone $FIBER_REPO
 cd fiber 
-git checkout wasm-db-implementation
+git checkout $FIBER_BRANCH
 npm install
 npm run build -ws 
 cd ../
 echo "run server"
-python server.py > server.log 2>&1 &
+python3 server.py > server.log 2>&1 &
 echo "run e2e"
 cd fiber-wasm-client-rpc
 npm install

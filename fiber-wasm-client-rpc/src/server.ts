@@ -140,6 +140,13 @@ type new_client_params = {
     databasePrefix?: string
 }
 
+server.addMethod("reset",async (args?: any[], context?: any) => {
+    await page.close()
+    context = await browser.newContext();
+    page = await context.newPage();
+    await page.goto(lightClientUrl); // Adjust URL if needed
+})
+
 server.addMethod("new_client", async (args?: new_client_params[], context?: any) => {
     // 获取请求头信息
     const headers = context?.headers || {};
@@ -178,6 +185,8 @@ server.addMethod("new_client", async (args?: new_client_params[], context?: any)
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 });
+
+
 
 
 app.use(bodyParser.json());
