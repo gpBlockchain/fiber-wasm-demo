@@ -25,7 +25,7 @@ This is a WASM demonstration project based on the Fiber network, providing a lig
 1. Clone this repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/gpBlockchain/fiber-wasm-demo.git
 cd fiber-wasm-demo
 ```
 
