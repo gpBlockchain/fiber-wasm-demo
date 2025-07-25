@@ -120,18 +120,3 @@ For more APIs, please refer to the `rpc.json` file.
 
 - [data.fiber.tar.gz](data.fiber.tar.gz): Ckb dev data for Fiber network 
 - [dev.toml](dev.toml): Ckb Development configuration file
-
-## Troubleshooting
-
-If you encounter issues, you can check the following log files:
-
-- `server.log`: HTTP server log
-- `fiber-wasm-client-rpc/service.log`: RPC service log
-
-## Contributing
-
-Contributions via Pull Requests or Issues are welcome to improve this project.
-
-## License
-
-Please refer to the project license file.
