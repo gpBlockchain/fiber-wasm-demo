@@ -666,6 +666,19 @@
       <button class="load-more-btn" id="refresh-local-channels" onclick="refreshLocalChannels()">刷新本地通道</button>
     </div>
     
+    <div class="sidebar-section">
+      <h3 style="color: #fff; margin-bottom: 15px; font-size: 18px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">💰 账户余额</h3>
+      <div id="account-balance-list">暂无数据</div>
+      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+        <button class="load-more-btn" id="refresh-account-balance" onclick="refreshAccountBalance()" style="flex: 1; margin-right: 5px;">刷新账户余额</button>
+        <select id="ckb-rpc-selector" onchange="changeCkbRpcUrl(this.value)" style="flex: 1; margin-left: 5px; padding: 5px; border-radius: 4px; border: 1px solid #ddd; background-color: #f8f9fa; color: #333;">
+          <option value="testnet">测试网</option>
+          <option value="mainnet">主网</option>
+          <option value="devnet">本地开发网</option>
+        </select>
+      </div>
+    </div>
+    
           <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(102, 126, 234, 0.2); text-align: center;">
             <span id="graph-update-time" style="font-size: 11px; color: #666; display: block; margin-bottom: 8px;">最后更新: 未更新</span>
             <button class="btn-primary" onclick="refreshGraphData()" style="padding: 6px 12px; font-size: 11px;">🔄 刷新数据</button>
@@ -844,6 +857,10 @@
       // 初始化本地通道数据
       await loadLocalChannels();
       startLocalChannelsAutoRefresh();
+      
+      // 初始化账户余额数据
+      await refreshAccountBalance();
+      startAccountBalanceAutoRefresh();
     } catch (error) {
       console.error('初始化失败:', error);
       showMessage('节点初始化失败: ' + error.message, 'error');
@@ -894,11 +911,23 @@
           window.localChannelsRefreshInterval = null;
         }
         
+        // 停止账户余额刷新
+        if (window.accountBalanceRefreshInterval) {
+          clearInterval(window.accountBalanceRefreshInterval);
+          window.accountBalanceRefreshInterval = null;
+        }
+        
         // 清空图数据
         window.graphNodesData = { nodes: [], lastCursor: null, hasMore: true };
+        
+        // 清空账户余额数据
+        window.accountBalanceData = { balances: [] };
+        document.getElementById('account-balance-list').innerHTML = '暂无数据';
         window.graphChannelsData = { channels: [], lastCursor: null, hasMore: true };
         // 清空本地通道数据
         window.localChannelsData = { channels: [] };
+        // 清空账户余额数据
+        window.accountBalanceData = { balances: [] };
       }
       
       // 停止fiber实例
@@ -1231,6 +1260,13 @@
     refreshPeers();
     initGraphData();
     loadLocalChannels();
+    refreshAccountBalance();
+    
+    // 重新启动自动刷新
+    if (window.accountBalanceRefreshInterval) {
+      clearInterval(window.accountBalanceRefreshInterval);
+    }
+    startAccountBalanceAutoRefresh();
     
     showMessage(`已切换到Fiber实例: ${prefix}`, 'success');
   }
@@ -1337,6 +1373,167 @@
   function startLocalChannelsAutoRefresh() {
     // 每10秒刷新一次本地通道
     window.localChannelsRefreshInterval = setInterval(refreshLocalChannels, 10000);
+  }
+  
+  // 账户余额相关变量
+  window.accountBalanceData = {
+    balances: []
+  };
+  
+  // CKB RPC接口URL列表
+  const CKB_RPC_URLS = {
+    'testnet': 'https://testnet.ckbapp.dev/',
+    'mainnet': 'https://mainnet.ckb.dev/',
+    'devnet': 'http://localhost:8114'
+  };
+  
+  // 当前选中的RPC URL
+  let currentCkbRpcUrl = 'testnet';
+  
+  // 获取账户余额信息
+  window.refreshAccountBalance = async () => {
+    const currentFiber = window.fibers[window.currentFiberPrefix];
+    if (!currentFiber) return;
+    
+    try {
+      // 1. 调用fiber.node_info()获取default_funding_lock_script
+      const nodeInfo = await currentFiber.invokeCommand("node_info", []);
+      const defaultFundingLockScript = nodeInfo.default_funding_lock_script;
+      
+      if (!defaultFundingLockScript) {
+        document.getElementById('account-balance-list').innerHTML = '<div style="color: #666; font-size: 11px;">无法获取账户信息</div>';
+        return;
+      }
+      
+
+      // 2. 调用CKB RPC接口获取余额
+      const response = await fetch(CKB_RPC_URLS[currentCkbRpcUrl], {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: 2,
+          jsonrpc: '2.0',
+          method: 'get_cells_capacity',
+          params: [
+            {
+              script: defaultFundingLockScript,
+              script_type: 'lock'
+            }
+          ]
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(`RPC错误: ${result.error.message}`);
+      }
+      
+      // 更新余额数据
+      window.accountBalanceData.balances = [{
+        script: defaultFundingLockScript,
+        capacity: result.result?.capacity || '0x0',
+        block_hash: result.result?.block_hash || '',
+        block_number: result.result?.block_number || '0x0'
+      }];
+      
+      // 更新显示
+      updateAccountBalanceDisplay();
+      document.getElementById('graph-update-time').textContent = `最后更新: ${new Date().toLocaleTimeString()}`;
+      
+    } catch (error) {
+      console.error('获取账户余额失败:', error);
+      document.getElementById('account-balance-list').innerHTML = `<div style="color: red; font-size: 11px;">加载失败: ${error.message}</div>`;
+    }
+  };
+  
+  // 更新账户余额显示
+  function updateAccountBalanceDisplay() {
+    const balanceListElement = document.getElementById('account-balance-list');
+    
+    if (!window.accountBalanceData.balances || window.accountBalanceData.balances.length === 0) {
+      balanceListElement.innerHTML = '<div style="color: #666; font-size: 11px;">暂无账户余额数据</div>';
+      return;
+    }
+    
+    let html = '';
+    window.accountBalanceData.balances.forEach((balance) => {
+      // 格式化余额显示，从十六进制转为十进制，并除以10^8显示为CKB单位
+      const capacityValue = parseInt(balance.capacity, 16) / 100000000;
+      const formattedCapacity = capacityValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+      
+      // 格式化区块高度
+      const blockNumber = parseInt(balance.block_number, 16).toLocaleString();
+      
+      // 截断区块哈希显示
+      const shortBlockHash = balance.block_hash.length > 16 ? 
+        `${balance.block_hash.substring(0, 10)}...${balance.block_hash.substring(balance.block_hash.length - 10)}` : 
+        balance.block_hash;
+      
+      // 截断script显示
+      const scriptArgs = balance.script.args.length > 16 ? 
+        `${balance.script.args.substring(0, 8)}...${balance.script.args.substring(balance.script.args.length - 8)}` : 
+        balance.script.args;
+      
+      html += `
+        <div class="info-card" style="margin-bottom: 12px;">
+          <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 600; color: #4a6cf7;">账户余额</span>
+            <div>
+              <span style="background: linear-gradient(45deg, #81c784, #66bb6a); color: #fff; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 500; box-shadow: 0 1px 3px rgba(129, 199, 132, 0.3); margin-right: 4px;">CKB</span>
+              <span style="background: ${currentCkbRpcUrl === 'testnet' ? 'linear-gradient(45deg, #64b5f6, #2196f3)' : currentCkbRpcUrl === 'mainnet' ? 'linear-gradient(45deg, #f06292, #e91e63)' : 'linear-gradient(45deg, #9575cd, #673ab7)'}; color: #fff; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 500; box-shadow: 0 1px 3px rgba(33, 150, 243, 0.3);">${currentCkbRpcUrl === 'testnet' ? '测试网' : currentCkbRpcUrl === 'mainnet' ? '主网' : '本地开发网'}</span>
+            </div>
+          </div>
+          <div style="margin-bottom: 6px; color: #2c3e50; display: flex; justify-content: space-between;">
+            <span>💰 余额:</span>
+            <span style="font-weight: 600; font-family: 'Fira Code', monospace;">${formattedCapacity} CKB</span>
+          </div>
+          <div style="margin-bottom: 6px; color: #2c3e50; display: flex; justify-content: space-between;">
+            <span>🔢 区块高度:</span>
+            <span style="font-weight: 600; font-family: 'Fira Code', monospace;">${blockNumber}</span>
+          </div>
+          <div style="margin-bottom: 6px; color: #2c3e50; display: flex; justify-content: space-between;">
+            <span>📦 区块哈希:</span>
+            <span style="font-weight: 600; font-family: 'Fira Code', monospace;" title="${balance.block_hash}">${shortBlockHash}</span>
+          </div>
+          <div style="font-size: 10px; color: #666; margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px;">
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${balance.script.args}">
+              🔑 ${scriptArgs}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    balanceListElement.innerHTML = html;
+  }
+  
+  // 开始账户余额自动刷新
+  function startAccountBalanceAutoRefresh() {
+    // 每30秒刷新一次账户余额
+    window.accountBalanceRefreshInterval = setInterval(refreshAccountBalance, 30000);
+  }
+  
+  // 切换CKB RPC URL
+  window.changeCkbRpcUrl = function(rpcType) {
+    currentCkbRpcUrl = rpcType;
+    document.getElementById('ckb-rpc-selector').value = rpcType;
+    
+    // 更新UI显示当前网络
+    let networkLabel;
+    if (rpcType === 'testnet') {
+      networkLabel = '测试网';
+    } else if (rpcType === 'mainnet') {
+      networkLabel = '主网';
+    } else if (rpcType === 'devnet') {
+      networkLabel = '本地开发网';
+    }
+    console.log(`已切换到CKB ${networkLabel}: ${CKB_RPC_URLS[rpcType]}`);
+    
+    // 立即刷新账户余额
+    refreshAccountBalance();
   }
 </script>
 <script>
@@ -1613,6 +1810,9 @@
 
   // Initialize on page load
   window.onload = () => {
+    // 初始化CKB RPC URL选择器
+    document.getElementById('ckb-rpc-selector').value = currentCkbRpcUrl;
+    
     initializeWorkers();
   };
 </script>
