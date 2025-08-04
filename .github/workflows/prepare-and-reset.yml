@@ -42,8 +42,8 @@ jobs:
           sleep 15  # 给服务器足够的启动时间
           echo "Checking if servers are running..."
           curl --head --silent --fail http://localhost:8000 || echo "Warning: HTTP server not responding"
+          # 检查RPC服务器是否响应
           curl --head --silent --fail http://localhost:9000 || echo "Warning: RPC server not responding"
-
       - name: Call reset API
         run: |
           echo "Calling reset API..."
@@ -52,7 +52,13 @@ jobs:
             --data '{ "id": 42,"jsonrpc": "2.0","method": "reset","params": []}'
           echo "\nReset API call completed"
           curl --location 'http://127.0.0.1:9000' --header 'Content-Type: application/json' --data '{ "id": 42,"jsonrpc": "2.0","method": "new_client","params": [{"privateKey":"0000000000000000000000000000000000000000000000000000000000000028","peerId":"0201010101010101010101010101010101010101010101010101010101010101","devConfig":"config.yml","databasePrefix":"default"}]}'
-          curl --location 'http://127.0.0.1:9000' --header 'Content-Type: application/json' --header 'databaseprefix: default' --data '{ "id": 42,"jsonrpc": "2.0","method": "node_info","params": []}'
+          # 检查node_info接口返回结果
+          response=$(curl -s --location 'http://127.0.0.1:9000' --header 'Content-Type: application/json' --header 'databaseprefix: default' --data '{ "id": 42,"jsonrpc": "2.0","method": "node_info","params": []}')
+          echo "Node info response: $response"
+          if [[ $response == *"message"* ]]; then
+            echo "Error in node_info response"
+            exit 1
+          fi
 
       - name: Check logs if failed
         if: failure()
