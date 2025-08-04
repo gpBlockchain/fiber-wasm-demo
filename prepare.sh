@@ -5,6 +5,7 @@ git clone $FIBER_REPO
 cd fiber 
 git checkout $FIBER_BRANCH
 npm install
+cargo install wasm-pack
 npm run build -ws 
 cd ../
 echo "run server"
