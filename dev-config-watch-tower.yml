@@ -7,7 +7,6 @@ fiber:
   gossip_network_maintenance_interval_ms: 1000
   open_channel_auto_accept_min_ckb_funding_amount: 10000000000
   watchtower_check_interval_seconds: 5
-  tlc_expiry_delta: 86400000
   standalone_watchtower_rpc_url: http://127.0.0.1:8229
   disable_built_in_watchtower: true
   scripts:
