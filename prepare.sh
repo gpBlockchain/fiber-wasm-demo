@@ -1,6 +1,6 @@
 set -x
-FIBER_REPO=${DEFAULT_FIBER_URL:-"https://github.com/nervosnetwork/fiber.git"}
-FIBER_BRANCH=${DEFAULT_FIBER_BRANCH:-"develop"}
+FIBER_REPO=${GitUrl:-"https://github.com/nervosnetwork/fiber.git"}
+FIBER_BRANCH=${GitBranch:-"develop"}
 git clone $FIBER_REPO
 cd fiber 
 git checkout $FIBER_BRANCH
