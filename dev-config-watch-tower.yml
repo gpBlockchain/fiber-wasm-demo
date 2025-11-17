@@ -12,34 +12,50 @@ fiber:
   scripts:
     - name: FundingLock
       script:
-        code_hash: 0xd7302abe337c459b84c9da6d739d7736d6e8dbfd2326a509981c35943cfe0f56
+        code_hash: 0xe7576045a47bb4cc172ffd0306ce01e232dc43805becb356e58f8bda9df51e26
         hash_type: type
         args: 0x
       cell_deps:
         - type_id:
             code_hash: 0x00000000000000000000000000000000000000000000000000545950455f4944
             hash_type: type
-            args: 0x52ea1dab3bde46fd55bd352fbf1d5f687d7b02007212a9fc986c5d66763d0ecb
+            args: 0x9ae780bb5b9b7d67bf5a0003813db01952dc37a81d56ac366fa2a80f497bc23a
         - cell_dep:
             out_point:
-              tx_hash: 0xecb1c1e3df6cd1e1ca16ca9bd392a3c030ece59cb5123bf156c51034e311a3ec # ckb_auth
+              tx_hash: 0x8b04bddc0dc0c471caff7c8ef88f8b91ee30b95a78f159eeb499208bb3bde710 # ckb_auth
               index: 0x0
             dep_type: code
     - name: CommitmentLock
       script:
-        code_hash: 0x2d7d93e3347ddf9f10f6690af75f1e24debaa6c4363f3b2c068f61c757253d38
+        code_hash: 0x3ec6f6b1aa204ef33114476419746476e12dc46182d18a31589ea4f9fee862a9
         hash_type: type
         args: 0x
       cell_deps:
         - type_id:
             code_hash: 0x00000000000000000000000000000000000000000000000000545950455f4944
             hash_type: type
-            args: 0x28da2af59d1949684dc72028cf2c5e979fec6efc954568510f9f62dc9a6415fb
+            args: 0x13db90164ac282f2dc5aaabc93a33115546e2b73ac9a097473e2880549121b1b
         - cell_dep:
             out_point:
-              tx_hash: 0xecb1c1e3df6cd1e1ca16ca9bd392a3c030ece59cb5123bf156c51034e311a3ec #ckb_auth
+              tx_hash: 0x8b04bddc0dc0c471caff7c8ef88f8b91ee30b95a78f159eeb499208bb3bde710 #ckb_auth
               index: 0x0
             dep_type: code
+    - name: SimpleUDT
+      script:
+        code_hash: 0x102583443ba6cfe5a3ac268bbb4475fb63eb497dce077f126ad3b148d4f4f8f8
+        hash_type: type
+        args: 0x
+      cell_deps:
+        - type_id:
+            code_hash: 0x00000000000000000000000000000000000000000000000000545950455f4944
+            hash_type: type
+            args: 0x910391089634a0d2c716586f03e4c053f06e461c8d75a428ff045006e856a6a6
+        - cell_dep:
+            out_point:
+              tx_hash: 0x03c4475655a46dc4984c49fce03316f80bf666236bd95118112731082758d686
+              index: 0x0
+            dep_type: code
+
 
 rpc:
   listening_addr: 127.0.0.1:8228
