@@ -667,6 +667,24 @@
     </div>
     
     <div class="sidebar-section">
+      <h3 style="color: #fff; margin-bottom: 15px; font-size: 18px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">💳 支付记录 (Payments)</h3>
+      <div style="margin-bottom: 8px; display: flex; gap: 6px; align-items: center;">
+        <select id="payments-status-filter" onchange="refreshPayments()" style="flex: 1; padding: 4px; border-radius: 4px; border: 1px solid #ddd; background-color: #f8f9fa; color: #333; font-size: 11px;">
+          <option value="">全部状态</option>
+          <option value="Created">Created</option>
+          <option value="Inflight">Inflight</option>
+          <option value="Success">Success</option>
+          <option value="Failed">Failed</option>
+        </select>
+      </div>
+      <div id="payments-list">暂无数据</div>
+      <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <button class="load-more-btn" id="refresh-payments" onclick="refreshPayments()" style="flex: 1;">刷新支付记录</button>
+        <button class="load-more-btn" id="load-more-payments" onclick="loadMorePayments()" style="flex: 1;" disabled>加载更多</button>
+      </div>
+    </div>
+    
+    <div class="sidebar-section">
       <h3 style="color: #fff; margin-bottom: 15px; font-size: 18px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">💰 账户余额</h3>
       <div id="account-balance-list">暂无数据</div>
       <div style="display: flex; justify-content: space-between; margin-top: 10px;">
@@ -857,6 +875,10 @@
       // 初始化本地通道数据
       await loadLocalChannels();
       startLocalChannelsAutoRefresh();
+      
+      // 初始化支付记录数据
+      await loadPayments();
+      startPaymentsAutoRefresh();
       
       // 初始化账户余额数据
       await refreshAccountBalance();
@@ -1257,13 +1279,18 @@
     refreshPeers();
     initGraphData();
     loadLocalChannels();
+    loadPayments();
     refreshAccountBalance();
     
     // 重新启动自动刷新
     if (window.accountBalanceRefreshInterval) {
       clearInterval(window.accountBalanceRefreshInterval);
     }
+    if (window.paymentsRefreshInterval) {
+      clearInterval(window.paymentsRefreshInterval);
+    }
     startAccountBalanceAutoRefresh();
+    startPaymentsAutoRefresh();
     
     showMessage(`已切换到Fiber实例: ${prefix}`, 'success');
   }
@@ -1370,6 +1397,122 @@
   function startLocalChannelsAutoRefresh() {
     // 每10秒刷新一次本地通道
     window.localChannelsRefreshInterval = setInterval(refreshLocalChannels, 10000);
+  }
+  
+  // 支付记录相关变量
+  window.paymentsData = {
+    payments: [],
+    lastCursor: null
+  };
+  
+  // 获取支付记录
+  async function loadPayments(isLoadMore = false) {
+    const currentFiber = window.fibers[window.currentFiberPrefix];
+    if (!currentFiber) return;
+    
+    try {
+      const statusFilter = document.getElementById('payments-status-filter')?.value || '';
+      const params = {};
+      if (statusFilter) {
+        params.status = statusFilter;
+      }
+      params.limit = '0xf'; // 15
+      if (isLoadMore && window.paymentsData.lastCursor) {
+        params.after = window.paymentsData.lastCursor;
+      }
+      
+      const result = await currentFiber.invokeCommand("list_payments", [params]);
+      
+      if (result.payments && result.payments.length > 0) {
+        if (isLoadMore) {
+          window.paymentsData.payments = window.paymentsData.payments.concat(result.payments);
+        } else {
+          window.paymentsData.payments = result.payments;
+        }
+        window.paymentsData.lastCursor = result.last_cursor || null;
+      } else if (!isLoadMore) {
+        window.paymentsData.payments = [];
+        window.paymentsData.lastCursor = null;
+      }
+      
+      // 启用/禁用加载更多按钮
+      const loadMoreBtn = document.getElementById('load-more-payments');
+      if (loadMoreBtn) {
+        loadMoreBtn.disabled = !window.paymentsData.lastCursor;
+      }
+      
+      updatePaymentsDisplay();
+      
+    } catch (error) {
+      console.error('加载支付记录失败:', error);
+      document.getElementById('payments-list').innerHTML = '<div style="color: red; font-size: 11px;">加载失败: ' + error.message + '</div>';
+    }
+  }
+  
+  // 更新支付记录显示
+  function updatePaymentsDisplay() {
+    const paymentsListElement = document.getElementById('payments-list');
+    
+    if (!window.paymentsData.payments || window.paymentsData.payments.length === 0) {
+      paymentsListElement.innerHTML = '<div style="color: #666; font-size: 11px;">暂无支付记录</div>';
+      return;
+    }
+    
+    let html = '';
+    window.paymentsData.payments.forEach((payment, index) => {
+      const paymentHash = payment.payment_hash ? payment.payment_hash.substring(0, 16) + '...' : 'N/A';
+      const status = payment.status || 'UNKNOWN';
+      
+      // 状态颜色
+      let statusColor = '#78909c';
+      if (status === 'Success') {
+        statusColor = '#66bb6a';
+      } else if (status === 'Failed') {
+        statusColor = '#ef5350';
+      } else if (status === 'Inflight') {
+        statusColor = '#ffa726';
+      } else if (status === 'Created') {
+        statusColor = '#42a5f5';
+      }
+      
+      // 时间处理
+      const createdAt = payment.created_at ? new Date(parseInt(payment.created_at, 16)).toLocaleString() : 'N/A';
+      const lastUpdatedAt = payment.last_updated_at ? new Date(parseInt(payment.last_updated_at, 16)).toLocaleString() : 'N/A';
+      
+      // 费用
+      const fee = payment.fee ? parseInt(payment.fee, 16).toLocaleString() : '0';
+      
+      html += `
+        <div class="local-channel-item">
+          <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span style="background: ${statusColor}; color: #fff; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 600;">${status}</span>
+          </div>
+          <div style="font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; margin-bottom: 3px; font-weight: bold; color: #e3f2fd; font-size: 11px;">🔑 ${paymentHash}</div>
+          <div style="margin-bottom: 3px; color: #c8e6c9; display: flex; justify-content: space-between; font-size: 11px;"><span>💸 费用:</span><span style="font-weight: 600;">${fee}</span></div>
+          ${payment.failed_error ? `<div style="margin-bottom: 3px; color: #ffcdd2; font-size: 10px;">❌ ${payment.failed_error}</div>` : ''}
+          <div style="font-size: 9px; color: #b39ddb; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">📅 创建: ${createdAt}</div>
+          <div style="font-size: 9px; color: #b39ddb;">🔄 更新: ${lastUpdatedAt}</div>
+        </div>
+      `;
+    });
+    
+    paymentsListElement.innerHTML = html;
+  }
+  
+  // 刷新支付记录
+  window.refreshPayments = async () => {
+    await loadPayments(false);
+    document.getElementById('graph-update-time').textContent = `最后更新: ${new Date().toLocaleTimeString()}`;
+  }
+  
+  // 加载更多支付记录
+  window.loadMorePayments = async () => {
+    await loadPayments(true);
+  }
+  
+  // 开始支付记录自动刷新
+  function startPaymentsAutoRefresh() {
+    window.paymentsRefreshInterval = setInterval(refreshPayments, 15000);
   }
   
   // 账户余额相关变量
