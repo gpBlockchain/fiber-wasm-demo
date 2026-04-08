@@ -612,7 +612,7 @@
           </div>
           <div class="form-group">
             <label>或粘贴 JSON 配置</label>
-            <textarea id="config-text" rows="4" placeholder='{"commands":[{"name":"connect_peer","params":[{"name":"address","type":"text"}]},{"name":"list_peer","params":[]},...],"params":{"peer":{"address":"...","peer_id":"..."},"channel":{"funding_amount":"...","public":true,"channel_id":"...","close_script":{"code_hash":"...","hash_type":"type","args":"..."},"fee_rate":"..."},"payment":{"invoice":"..."}}}'></textarea>
+            <textarea id="config-text" rows="4" placeholder='{"commands":[{"name":"connect_peer","params":[{"name":"address","type":"text"}]},{"name":"list_peer","params":[]},...],"params":{"peer":{"address":"...","pubkey":"..."},"channel":{"funding_amount":"...","public":true,"channel_id":"...","close_script":{"code_hash":"...","hash_type":"type","args":"..."},"fee_rate":"..."},"payment":{"invoice":"..."}}}'></textarea>
           </div>
           <button class="btn-primary" onclick="loadConfig()">📥 加载配置</button>
         </div>
@@ -992,10 +992,7 @@
         <div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 3px; border-left: 3px solid #007bff;">
           <div><strong>节点 ${index + 1}:</strong></div>
           <div style="font-family: monospace; font-size: 12px; margin: 2px 0;">
-            <strong>Peer ID:</strong> ${peer.peer_id || 'N/A'}
-          </div>
-          <div style="font-family: monospace; font-size: 12px; margin: 2px 0;">
-            <strong>公钥:</strong> ${peer.pubkey || 'N/A'}
+            <strong>Pubkey:</strong> ${peer.pubkey || 'N/A'}
           </div>
           <div style="font-size: 12px; margin: 2px 0;">
             <strong>地址:</strong> ${peer.addresses && peer.addresses.length > 0 ? peer.addresses.join(', ') : '无地址信息'}
@@ -1310,7 +1307,7 @@
     let html = '';
     window.localChannelsData.channels.forEach((channel, index) => {
       const channelId = channel.channel_id ? channel.channel_id.substring(0, 16) + '...' : 'N/A';
-      const peerId = channel.peer_id ? channel.peer_id.substring(0, 16) + '...' : 'N/A';
+      const pubkey = channel.pubkey ? channel.pubkey.substring(0, 16) + '...' : 'N/A';
       const outpoint = channel.channel_outpoint ? channel.channel_outpoint.substring(0, 16) + '...' : 'N/A';
       
       // 状态处理
@@ -1346,7 +1343,7 @@
             ${channel.enabled ? '<span style="background: linear-gradient(45deg, #81c784, #66bb6a); color: #fff; padding: 2px 6px; border-radius: 8px; font-size: 8px; font-weight: 500; box-shadow: 0 1px 3px rgba(129, 199, 132, 0.3);">启用</span>' : '<span style="background: linear-gradient(45deg, #e57373, #ef5350); color: #fff; padding: 2px 6px; border-radius: 8px; font-size: 8px; font-weight: 500; box-shadow: 0 1px 3px rgba(229, 115, 115, 0.3);">禁用</span>'}
           </div>
           <div style="font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; margin-bottom: 3px; font-weight: bold; color: #e3f2fd; font-size: 12px;">🆔 ${channelId}</div>
-           <div style="font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; margin-bottom: 3px; color: #bbdefb;">👤 ${peerId}</div>
+           <div style="font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; margin-bottom: 3px; color: #bbdefb;">👤 ${pubkey}</div>
            <div style="font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; margin-bottom: 6px; color: #90caf9; font-size: 10px;">📍 ${outpoint}</div>
            <div style="margin-bottom: 3px; color: #c8e6c9; display: flex; justify-content: space-between;"><span>💰 本地余额:</span><span style="font-weight: 600;">${localBalance}</span></div>
            <div style="margin-bottom: 3px; color: #ffcdd2; display: flex; justify-content: space-between;"><span>💳 远程余额:</span><span style="font-weight: 600;">${remoteBalance}</span></div>

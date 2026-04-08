@@ -25,7 +25,7 @@
         {
             "name": "open_channel",
             "params": [
-                { "name": "peer_id", "type": "text" },
+                { "name": "pubkey", "type": "text" },
                 { "name": "funding_amount", "type": "text" },
                 { "name": "public", "type": "checkbox" },
                 { "name": "funding_udt_type_script", "type": "json" },
@@ -62,7 +62,7 @@
         {
             "name": "list_channels",
             "params": [
-                { "name": "peer_id", "type": "text" },
+                { "name": "pubkey", "type": "text" },
                 { "name": "include_closed", "type": "checkbox" }
             ]
         },
@@ -223,7 +223,7 @@
         {
             "name": "disconnect_peer",
             "params": [
-                { "name": "peer_id", "type": "text" }
+                { "name": "pubkey", "type": "text" }
             ]
         },
         {
@@ -283,7 +283,7 @@
             "final_tlc_expiry": "0"
         },
         "channel": {
-            "peer_id": "QmTSpNhqfwjepJS475JTMck5ftvbSatmrBew9mgfwy9Rgq",
+            "pubkey": "",
             "funding_amount": "0xba43b7400",
             "public": true,
             "funding_udt_type_script": null,
@@ -314,7 +314,7 @@
             "amount": "0",
             "payment_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "expiry": "0",
-            "hash_algorithm": "CkbHash",
+            "hash_algorithm": "ckb_hash",
             "tlc_id": "0",
             "reason": "RemoveTlcFulfill",
             "commitment_number": "0"
@@ -333,7 +333,7 @@
             "fallback_address": "",
             "final_expiry_delta": "0",
             "udt_type_script": null,
-            "hash_algorithm": "CkbHash",
+            "hash_algorithm": "ckb_hash",
             "invoice": "fibt10000000001pcsaug0p0exgf0pnm6vk6kgysc2mherkdnx2v90unk9f875ykusakhevxxd5ynsm3jt302tdkcxya5ej6q60eypglts7jq7s4eq0cmfjrdf6kajch9d3xvxv9gmvred4e720faxtzwkqddxpwk5m7kjwnajv90m6qx7ms9t70rgjattjjr8rx3aqc0x7xr5vwcsepr35f8gjjsly6hh5s9vyept4ygtfxml6n82xk5t9y2k0ugau5ctmddqe4qq7nuwzah0gtx60jncvlw09rw6h7trkvutahu44wx09fd8dfcc9wn4nmsytrazq564z0l7e708hav3u08almaf2r409r4maf8suzp4mysp7n490f",
             "payment_hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
         },
@@ -360,9 +360,9 @@
             "hops_info": []
         },
         "peer": {
-            "address": "/ip4/16.162.99.28/tcp/8229/ws/p2p/QmTSpNhqfwjepJS475JTMck5ftvbSatmrBew9mgfwy9Rgq",
+            "address": "/ip4/16.162.99.28/tcp/8229/ws",
             "save": false,
-            "peer_id": "QmTSpNhqfwjepJS475JTMck5ftvbSatmrBew9mgfwy9Rgq"
+            "pubkey": ""
         },
         "watchtower": {
             "channel_id": "0x0000000000000000000000000000000000000000000000000000000000000000",
